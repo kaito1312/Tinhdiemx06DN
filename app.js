@@ -20,6 +20,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lỗi submit button là do validation "required". Xóa required để cho phép submit thoải mái.
     hbInputs.forEach(input => input.required = false);
 
+    // Bắt buộc tất cả các ô nhập số không được vượt quá 10 và tối đa 2 chữ số thập phân
+    const allNumberInputs = document.querySelectorAll('input[type="number"]');
+    allNumberInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.value === "") return;
+            
+            let val = parseFloat(this.value);
+            
+            // Giới hạn trong khoảng 0 - 10
+            if (val > 10) {
+                this.value = "10";
+            } else if (val < 0) {
+                this.value = "0";
+            }
+            
+            // Cắt phần thập phân tối đa 2 chữ số
+            if (this.value.includes('.')) {
+                let parts = this.value.split('.');
+                if (parts[1].length > 2) {
+                    this.value = parts[0] + '.' + parts[1].substring(0, 2);
+                }
+            }
+        });
+    });
+
     // Handle Tab Switch
     tabBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -66,7 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
     [...thptInputs, ...hbInputs, ratioSelect].forEach(input => {
         if (input) input.addEventListener('input', updateLiveBreakdown);
     });
-    if (ratioSelect) ratioSelect.addEventListener('change', updateLiveBreakdown);
+    if (ratioSelect) {
+        ratioSelect.addEventListener('change', () => {
+            updateLiveBreakdown();
+            // Nếu bảng kết quả đang hiện, tự động submit để cập nhật danh sách
+            if (!resultsSection.classList.contains('hidden')) {
+                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        });
+    }
 
     function updateLiveBreakdown() {
         if (currentMethod !== 'COMBINED') return;
